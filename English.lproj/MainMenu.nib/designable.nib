@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="6751" systemVersion="13F34" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="7706" systemVersion="14F27" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment version="1050" identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="6751"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="7706"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="NSApplication">
@@ -52,6 +52,8 @@
             <connections>
                 <outlet property="dropboxCheckbox" destination="858" id="896"/>
                 <outlet property="heightSlider" destination="784" id="806"/>
+                <outlet property="importantThingRecorder" destination="41R-e5-Dbm" id="csM-Iz-cx1"/>
+                <outlet property="importantThingTextField" destination="dnY-JI-3nz" id="NLR-gf-TdC"/>
                 <outlet property="jcMenu" destination="206" id="215"/>
                 <outlet property="mainRecorder" destination="555" id="556"/>
                 <outlet property="prefsPanel" destination="218" id="220"/>
@@ -303,17 +305,17 @@
                             <tabViewItem label="Hotkeys" identifier="net.sf.jumpcut.preferences.hotkey.tiff" id="346">
                                 <view key="view" id="347">
                                     <rect key="frame" x="0.0" y="0.0" width="507" height="471"/>
-                                    <autoresizingMask key="autoresizingMask"/>
+                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <box title="Box" boxType="oldStyle" borderType="none" titlePosition="noTitle" id="348">
-                                            <rect key="frame" x="0.0" y="227" width="555" height="125"/>
+                                            <rect key="frame" x="0.0" y="227" width="555" height="200"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <view key="contentView">
-                                                <rect key="frame" x="0.0" y="0.0" width="555" height="125"/>
+                                                <rect key="frame" x="0.0" y="0.0" width="555" height="200"/>
                                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                 <subviews>
                                                     <textField verticalHuggingPriority="750" id="350">
-                                                        <rect key="frame" x="16" y="87" width="65" height="18"/>
+                                                        <rect key="frame" x="16" y="164" width="65" height="18"/>
                                                         <autoresizingMask key="autoresizingMask"/>
                                                         <textFieldCell key="cell" sendsActionOnEndEditing="YES" id="747">
                                                             <font key="font" metaFont="label"/>
@@ -324,7 +326,7 @@
                                                         </textFieldCell>
                                                     </textField>
                                                     <textField verticalHuggingPriority="750" id="497">
-                                                        <rect key="frame" x="247" y="48" width="255" height="61"/>
+                                                        <rect key="frame" x="247" y="123" width="255" height="61"/>
                                                         <autoresizingMask key="autoresizingMask"/>
                                                         <textFieldCell key="cell" sendsActionOnEndEditing="YES" id="748">
                                                             <font key="font" metaFont="label"/>
@@ -334,12 +336,50 @@
                                                         </textFieldCell>
                                                     </textField>
                                                     <customView id="555" customClass="SRRecorderControl">
-                                                        <rect key="frame" x="89" y="87" width="150" height="22"/>
+                                                        <rect key="frame" x="89" y="162" width="150" height="22"/>
                                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                         <connections>
                                                             <outlet property="delegate" destination="213" id="591"/>
                                                         </connections>
                                                     </customView>
+                                                    <textField verticalHuggingPriority="750" id="YtU-Nt-7hm">
+                                                        <rect key="frame" x="16" y="78" width="72" height="39"/>
+                                                        <autoresizingMask key="autoresizingMask"/>
+                                                        <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="Important Thing Hotkey" id="4rf-jK-87w">
+                                                            <font key="font" size="9" name=".HelveticaNeueDeskInterface-Regular"/>
+                                                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                                        </textFieldCell>
+                                                    </textField>
+                                                    <textField verticalHuggingPriority="750" id="vkK-ZG-vWd">
+                                                        <rect key="frame" x="247" y="58" width="255" height="61"/>
+                                                        <autoresizingMask key="autoresizingMask"/>
+                                                        <textFieldCell key="cell" sendsActionOnEndEditing="YES" id="J2T-EK-Jnc">
+                                                            <font key="font" metaFont="label"/>
+                                                            <string key="title">To change the hotkey, simply click on the recorder and type another. To clear the hotkey, click on the "X". Use of a hotkey claimed by another application can lead to unpredictable results.</string>
+                                                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                                        </textFieldCell>
+                                                    </textField>
+                                                    <customView id="41R-e5-Dbm" customClass="SRRecorderControl">
+                                                        <rect key="frame" x="89" y="97" width="150" height="22"/>
+                                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                                        <connections>
+                                                            <outlet property="delegate" destination="213" id="Tyu-3O-BSG"/>
+                                                        </connections>
+                                                    </customView>
+                                                    <textField verticalHuggingPriority="750" id="dnY-JI-3nz">
+                                                        <rect key="frame" x="89" y="70" width="150" height="22"/>
+                                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" drawsBackground="YES" id="ZQn-1N-alC">
+                                                            <font key="font" metaFont="system"/>
+                                                            <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                                                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                                        </textFieldCell>
+                                                        <connections>
+                                                            <outlet property="delegate" destination="213" id="fpx-au-b5M"/>
+                                                        </connections>
+                                                    </textField>
                                                 </subviews>
                                             </view>
                                             <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
@@ -538,7 +578,7 @@
                             <tabViewItem label="Acknowledgements" identifier="com.generalarcade.flycut.32.png" id="352">
                                 <view key="view" id="353">
                                     <rect key="frame" x="0.0" y="0.0" width="507" height="471"/>
-                                    <autoresizingMask key="autoresizingMask"/>
+                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <box title="Box" boxType="oldStyle" borderType="none" titlePosition="noTitle" id="354">
                                             <rect key="frame" x="-3" y="109" width="555" height="376"/>
@@ -552,10 +592,10 @@
                                                         <autoresizingMask key="autoresizingMask"/>
                                                         <clipView key="contentView" id="Yuw-af-7PF">
                                                             <rect key="frame" x="1" y="1" width="474" height="344"/>
-                                                            <autoresizingMask key="autoresizingMask"/>
+                                                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                             <subviews>
                                                                 <textView editable="NO" importsGraphics="NO" richText="NO" usesRuler="YES" usesFontPanel="YES" verticallyResizable="YES" spellingCorrection="YES" smartInsertDelete="YES" id="357">
-                                                                    <rect key="frame" x="0.0" y="0.0" width="398" height="406"/>
+                                                                    <rect key="frame" x="0.0" y="0.0" width="474" height="344"/>
                                                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                                     <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
@@ -633,6 +673,7 @@ Thanks to Clare Bates Congdon, Joshua Davis, Brad Graham, David Jacobs, John Ken
                     </tabView>
                 </subviews>
             </view>
+            <point key="canvasLocation" x="278.5" y="38.5"/>
         </window>
         <userDefaultsController representsSharedInstance="YES" id="264" userLabel="Shared Defaults"/>
         <customObject id="503" userLabel="UKPrefsPanel" customClass="UKPrefsPanel">

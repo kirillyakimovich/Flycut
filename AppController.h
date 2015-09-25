@@ -61,6 +61,8 @@
     IBOutlet NSButtonCell * dropboxCheckbox;
 }
 
+@property (nonatomic, strong)	IBOutlet SRRecorderControl	*importantThingRecorder;
+
 //@property(retain, nonatomic) IBOutlet NSButtonCell * dropboxCheckbox;
 
 // Basic functionality

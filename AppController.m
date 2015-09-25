@@ -19,6 +19,23 @@
 
 #define _DISPLENGTH 40
 
+static NSString *const kFCMainHotKey = @"ShortcutRecorder mainHotkey";
+static NSString *const kFCImportantThingHotKey = @"ShortcutRecorder importantThingHotkey";
+static NSString *const kFCImportantThingText = @"ShortcutRecorder Important Thing Text";
+
+@interface AppController () <NSTextFieldDelegate>
+
+@property (nonatomic, strong) SGHotKey *pasteImportantThingHotKey;
+@property (nonatomic, copy) NSString *importantThingString;
+@property (nonatomic, strong) IBOutlet NSTextField *importantThingTextField;
+
+@end
+
+FOUNDATION_STATIC_INLINE KeyCombo SRMakeKeyComboFromDictionary(NSDictionary *dictionary) {
+  return SRMakeKeyCombo([dictionary[@"keyCode"] intValue],
+                        [dictionary[@"modifierFlags"] intValue]);
+}
+
 @implementation AppController
 
 - (id)init
@@ -27,7 +44,7 @@
 		[NSNumber numberWithInt:10],
 		@"displayNum",
 		[NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:[NSNumber numberWithInt:9],[NSNumber numberWithLong:1179648],nil] forKeys:[NSArray arrayWithObjects:@"keyCode",@"modifierFlags",nil]],
-		@"ShortcutRecorder mainHotkey",
+		kFCMainHotKey,
 		[NSNumber numberWithInt:40],
 		@"rememberNum",
 		[NSNumber numberWithInt:1],
@@ -65,13 +82,23 @@
 
 - (void)awakeFromNib
 {
-
 	// We no longer get autosave from ShortcutRecorder, so let's set the recorder by hand
-	if ( [[DBUserDefaults standardUserDefaults] dictionaryForKey:@"ShortcutRecorder mainHotkey"] ) {
-		[mainRecorder setKeyCombo:SRMakeKeyCombo([[[[DBUserDefaults standardUserDefaults] dictionaryForKey:@"ShortcutRecorder mainHotkey"] objectForKey:@"keyCode"] intValue],
-												 [[[[DBUserDefaults standardUserDefaults] dictionaryForKey:@"ShortcutRecorder mainHotkey"] objectForKey:@"modifierFlags"] intValue] )
-		];
+  NSDictionary *serializedMainHotKey = [[DBUserDefaults standardUserDefaults] dictionaryForKey:kFCMainHotKey];
+  if(serializedMainHotKey)
+  {
+    [mainRecorder setKeyCombo:SRMakeKeyComboFromDictionary(serializedMainHotKey)];
 	};
+  
+  NSDictionary *serializedCrucibleHotKey = [[DBUserDefaults standardUserDefaults] dictionaryForKey:kFCImportantThingHotKey];
+  if(serializedCrucibleHotKey)
+  {
+    [self.importantThingRecorder setKeyCombo:SRMakeKeyComboFromDictionary(serializedCrucibleHotKey)];
+  };
+  NSString *importantThingText = [[DBUserDefaults standardUserDefaults] stringForKey:kFCImportantThingText];
+  if (importantThingText)
+  {
+    self.importantThingTextField.stringValue = importantThingText;
+  }
 	// Initialize the JumpcutStore
 	clippingStore = [[JumpcutStore alloc] initRemembering:[[DBUserDefaults standardUserDefaults] integerForKey:@"rememberNum"]
 											   displaying:[[DBUserDefaults standardUserDefaults] integerForKey:@"displayNum"]
@@ -515,12 +542,6 @@
 	}
 }
 
-- (void)applicationDidFinishLaunching:(NSNotification *)notification
-{
-	//Create our hot key
-	[self toggleMainHotKey:[NSNull null]];
-}
-
 - (void) updateBezel
 {
 	if (stackPosition >= [clippingStore jcListCount] && stackPosition != 0) { // deleted last item
@@ -574,7 +595,6 @@
 	[self hideBezel];
 }
 
-
 - (void)hitMainHotKey:(SGHotKey *)hotKey
 {
 	if ( ! isBezelDisplayed ) {
@@ -588,21 +608,69 @@
 	}
 }
 
+- (void)hitImportantThingHotKey:(SGHotKey *)hotKey
+{
+  NSString *pbFullText;
+  NSArray *pbTypes;
+  NSPasteboard *pasteboard = [NSPasteboard generalPasteboard];
+  [pasteboard declareTypes:[NSArray arrayWithObject:NSStringPboardType] owner:nil];
+
+  pbFullText = self.importantThingTextField.stringValue;
+  if (pbFullText)
+  {
+    pbTypes = [NSArray arrayWithObjects:@"NSStringPboardType",NULL];
+    
+    [pasteboard setString:pbFullText forType:@"NSStringPboardType"];
+    [self performSelector:@selector(fakeCommandV) withObject:nil afterDelay:0.2];
+  }
+}
+
 - (IBAction)toggleMainHotKey:(id)sender
 {
+  if(sender != mainRecorder)
+  {
+    return;
+  }
+
 	if (mainHotKey != nil)
 	{
-		[[SGHotKeyCenter sharedCenter] unregisterHotKey:mainHotKey];
-		[mainHotKey release];
-		mainHotKey = nil;
+    [[SGHotKeyCenter sharedCenter] unregisterHotKey:mainHotKey];
+    [mainHotKey release];
+    mainHotKey = nil;
 	}
+  SRRecorderControl *recorder = (SRRecorderControl *)sender;
+  KeyCombo combo = [recorder keyCombo];
 	mainHotKey = [[SGHotKey alloc] initWithIdentifier:@"mainHotKey"
-											   keyCombo:[SGKeyCombo keyComboWithKeyCode:[mainRecorder keyCombo].code
-																			  modifiers:[mainRecorder cocoaToCarbonFlags: [mainRecorder keyCombo].flags]]];
+											   keyCombo:[SGKeyCombo keyComboWithKeyCode:combo.code
+																			  modifiers:[recorder cocoaToCarbonFlags:combo.flags]]];
 	[mainHotKey setName: @"Activate Flycut HotKey"]; //This is typically used by PTKeyComboPanel
 	[mainHotKey setTarget: self];
 	[mainHotKey setAction: @selector(hitMainHotKey:)];
 	[[SGHotKeyCenter sharedCenter] registerHotKey:mainHotKey];
+}
+
+- (IBAction)toggleImportantThingHotKey:(id)sender
+{
+  if(sender != self.importantThingRecorder)
+  {
+    return;
+  }
+  
+  if (self.pasteImportantThingHotKey != nil)
+  {
+    [[SGHotKeyCenter sharedCenter] unregisterHotKey:self.pasteImportantThingHotKey];
+    [self.pasteImportantThingHotKey release];
+    self.pasteImportantThingHotKey = nil;
+  }
+  SRRecorderControl *recorder = (SRRecorderControl *)sender;
+  KeyCombo combo = [recorder keyCombo];
+  self.pasteImportantThingHotKey = [[SGHotKey alloc] initWithIdentifier:@"mainHotKey"
+                                           keyCombo:[SGKeyCombo keyComboWithKeyCode:combo.code
+                                                                          modifiers:[recorder cocoaToCarbonFlags:combo.flags]]];
+  [self.pasteImportantThingHotKey  setName: @"Activate Paste Crucible HotKey"]; //This is typically used by PTKeyComboPanel
+  [self.pasteImportantThingHotKey  setTarget: self];
+  [self.pasteImportantThingHotKey  setAction: @selector(hitImportantThingHotKey:)];
+  [[SGHotKeyCenter sharedCenter] registerHotKey:self.pasteImportantThingHotKey ];
 }
 
 -(IBAction)clearClippingList:(id)sender {
@@ -709,6 +777,7 @@
     [jcPasteboard setString:pbFullText forType:@"NSStringPboardType"];
     [self setPBBlockCount:[NSNumber numberWithInt:[jcPasteboard changeCount]]];
     return true;
+  
 }
 
 -(void) loadEngineFromPList
@@ -776,43 +845,68 @@
 }
 
 -(void) saveEngine {
+  DBUserDefaults *standardDefaults = [DBUserDefaults standardUserDefaults];
+  
+  if (self.importantThingTextField.stringValue.length > 0)
+  {
+    [standardDefaults setObject:self.importantThingTextField.stringValue forKey:kFCImportantThingText];
+  }
     NSMutableDictionary *saveDict;
     NSMutableArray *jcListArray = [NSMutableArray array];
     saveDict = [NSMutableDictionary dictionaryWithCapacity:3];
     [saveDict setObject:@"0.7" forKey:@"version"];
-    [saveDict setObject:[NSNumber numberWithInt:[[DBUserDefaults standardUserDefaults] integerForKey:@"rememberNum"]]
+    [saveDict setObject:[NSNumber numberWithInt:[standardDefaults integerForKey:@"rememberNum"]]
                  forKey:@"rememberNum"];
     [saveDict setObject:[NSNumber numberWithInt:_DISPLENGTH]
                  forKey:@"displayLen"];
-    [saveDict setObject:[NSNumber numberWithInt:[[DBUserDefaults standardUserDefaults] integerForKey:@"displayNum"]]
+    [saveDict setObject:[NSNumber numberWithInt:[standardDefaults integerForKey:@"displayNum"]]
                  forKey:@"displayNum"];
     for (int i = 0 ; i < [clippingStore jcListCount]; i++)
-		[jcListArray addObject:[NSDictionary dictionaryWithObjectsAndKeys:
-                                [clippingStore clippingContentsAtPosition:i], @"Contents",
-                                [clippingStore clippingTypeAtPosition:i], @"Type",
-                                [NSNumber numberWithInt:i], @"Position",nil]];
+      [jcListArray addObject:[NSDictionary dictionaryWithObjectsAndKeys:
+                              [clippingStore clippingContentsAtPosition:i], @"Contents",
+                              [clippingStore clippingTypeAtPosition:i], @"Type",
+                              [NSNumber numberWithInt:i], @"Position",nil]];
     [saveDict setObject:jcListArray forKey:@"jcList"];
-    [[DBUserDefaults standardUserDefaults] setObject:saveDict forKey:@"store"];
-    [[DBUserDefaults standardUserDefaults] synchronize];
+    [standardDefaults setObject:saveDict forKey:@"store"];
+    [standardDefaults synchronize];
 }
 
 - (void)setHotKeyPreferenceForRecorder:(SRRecorderControl *)aRecorder {
-	if (aRecorder == mainRecorder) {
-		[[DBUserDefaults standardUserDefaults] setObject:
-			[NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:[NSNumber numberWithInt:[mainRecorder keyCombo].code],[NSNumber numberWithInt:[mainRecorder keyCombo].flags],nil] forKeys:[NSArray arrayWithObjects:@"keyCode",@"modifierFlags",nil]]
-		forKey:@"ShortcutRecorder mainHotkey"];
-	}
+  if (aRecorder == mainRecorder) {
+    KeyCombo combo = [mainRecorder keyCombo];
+    NSDictionary *serializedMainHotKey = [NSDictionary dictionaryWithObjects:@[@(combo.code), @(combo.flags)]
+                                                                     forKeys:@[@"keyCode", @"modifierFlags"]];
+    [[DBUserDefaults standardUserDefaults] setObject:serializedMainHotKey
+                                              forKey:kFCMainHotKey];
+  }
+  if (aRecorder == self.importantThingRecorder) {
+    KeyCombo combo = [self.importantThingRecorder keyCombo];
+    NSDictionary *serializeCrucibleHotKey = [NSDictionary dictionaryWithObjects:@[@(combo.code), @(combo.flags)]
+                                                                     forKeys:@[@"keyCode", @"modifierFlags"]];
+    [[DBUserDefaults standardUserDefaults] setObject:serializeCrucibleHotKey
+                                              forKey:kFCImportantThingHotKey];
+  }
+  
+  [[DBUserDefaults standardUserDefaults] synchronize];
 }
 
 - (BOOL)shortcutRecorder:(SRRecorderControl *)aRecorder isKeyCode:(NSInteger)keyCode andFlagsTaken:(NSUInteger)flags reason:(NSString **)aReason {
 	return NO;
 }
 
-- (void)shortcutRecorder:(SRRecorderControl *)aRecorder keyComboDidChange:(KeyCombo)newKeyCombo {
-	if (aRecorder == mainRecorder) {
+- (void)shortcutRecorder:(SRRecorderControl *)aRecorder keyComboDidChange:(KeyCombo)newKeyCombo
+{
+	if (aRecorder == mainRecorder)
+  {
 		[self toggleMainHotKey: aRecorder];
-		[self setHotKeyPreferenceForRecorder: aRecorder];
 	}
+  
+  if (aRecorder == self.importantThingRecorder)
+  {
+    [self toggleImportantThingHotKey:aRecorder];
+  }
+  
+  [self setHotKeyPreferenceForRecorder: aRecorder];
 	NSLog(@"code: %ld, flags: %lu", (long)newKeyCombo.code, (unsigned long)newKeyCombo.flags);
 }
 
@@ -842,6 +936,12 @@
 	[[SGHotKeyCenter sharedCenter] unregisterHotKey: mainHotKey];
 	[mainHotKey release];
 	mainHotKey = nil;
+  
+  [[SGHotKeyCenter sharedCenter] unregisterHotKey:self.pasteImportantThingHotKey];
+  [self.pasteImportantThingHotKey release];
+  self.pasteImportantThingHotKey = nil;
+
+  
 	[self hideBezel];
 	[[NSDistributedNotificationCenter defaultCenter]
 		removeObserver:self
@@ -872,6 +972,21 @@
 	[bezel release];
 	[srTransformer release];
 	[super dealloc];
+}
+
+#pragma mark - NSTextFieldDelegate
+
+- (void)controlTextDidChange:(NSNotification *)aNotification
+{
+  if ([aNotification object] == self.importantThingTextField)
+  {
+    
+  }
+}
+
+- (void)controlTextDidEndEditing:(NSNotification *)aNotification
+{
+  
 }
 
 @end
